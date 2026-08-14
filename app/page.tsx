@@ -111,6 +111,10 @@ export default function Home() {
     setEventDialogOpen(true)
   }
 
+  const updateEventTiming = (event: CalendarEvent, changes: Pick<CalendarEvent, "date" | "startTime" | "endTime">) => {
+    setEvents((previous) => previous.map((currentEvent) => currentEvent.id === event.id ? { ...currentEvent, ...changes } : currentEvent))
+  }
+
   const navigate = (direction: -1 | 1) => {
     const nextDate = view === "day" ? addDays(currentDate, direction) : view === "week" ? addWeeks(currentDate, direction) : view === "month" ? addMonths(currentDate, direction) : addYears(currentDate, direction)
     setCurrentDate(nextDate)
@@ -246,8 +250,8 @@ export default function Home() {
             </div>
           </div>
           <div className="flex-1 overflow-auto p-4">
-            {view === "day" && <DayView currentDate={currentDate} events={visibleEvents} settings={settings} searchQuery={searchQuery} onOpenEvent={openEdit} onTimeSlot={openCreate} />}
-            {view === "week" && <WeekView currentDate={currentDate} events={visibleEvents} settings={settings} searchQuery={searchQuery} onOpenEvent={openEdit} onTimeSlot={openCreate} />}
+            {view === "day" && <DayView currentDate={currentDate} events={visibleEvents} settings={settings} searchQuery={searchQuery} onOpenEvent={openEdit} onTimeSlot={openCreate} onUpdateEvent={updateEventTiming} />}
+            {view === "week" && <WeekView currentDate={currentDate} events={visibleEvents} settings={settings} searchQuery={searchQuery} onOpenEvent={openEdit} onTimeSlot={openCreate} onUpdateEvent={updateEventTiming} />}
             {view === "month" && <MonthView currentDate={currentDate} events={visibleEvents} settings={settings} searchQuery={searchQuery} onOpenEvent={openEdit} onDaySelect={(date) => goToDate(date)} />}
             {view === "year" && <YearView currentDate={currentDate} settings={settings} onSelectMonth={(date) => goToDate(date, "month")} />}
           </div>

@@ -64,7 +64,6 @@ function TimeGrid({ days, events, settings, searchQuery, onOpenEvent, onTimeSlot
     if (pointerEvent.button !== 0) return
     const column = pointerEvent.currentTarget.closest<HTMLElement>("[data-calendar-day]")
     if (!column) return
-    pointerEvent.preventDefault()
     pointerEvent.currentTarget.setPointerCapture(pointerEvent.pointerId)
     const nextDrag: DragState = {
       event,
@@ -89,7 +88,6 @@ function TimeGrid({ days, events, settings, searchQuery, onOpenEvent, onTimeSlot
   const updatePointer = (pointerEvent: ReactPointerEvent<HTMLElement>) => {
     const activeDrag = dragRef.current
     if (!activeDrag || activeDrag.pointerId !== pointerEvent.pointerId) return
-    pointerEvent.preventDefault()
     const delta = snappedDelta(activeDrag.startClientY, pointerEvent.clientY)
     const nextDrag = { ...activeDrag }
 
@@ -100,7 +98,10 @@ function TimeGrid({ days, events, settings, searchQuery, onOpenEvent, onTimeSlot
       const duration = activeDrag.initialEnd - activeDrag.initialStart
       nextDrag.previewStart = clamp(activeDrag.initialStart + delta, 0, lastTimeSlot - duration)
       nextDrag.previewEnd = nextDrag.previewStart + duration
-      const targetColumn = document.elementFromPoint(pointerEvent.clientX, pointerEvent.clientY)?.closest<HTMLElement>("[data-calendar-day]")
+      const targetColumn = Array.from(document.querySelectorAll<HTMLElement>("[data-calendar-day]")).find((column) => {
+        const bounds = column.getBoundingClientRect()
+        return pointerEvent.clientX >= bounds.left && pointerEvent.clientX <= bounds.right && pointerEvent.clientY >= bounds.top && pointerEvent.clientY <= bounds.bottom
+      })
       const targetDate = targetColumn?.dataset.calendarDay
       nextDrag.previewDate = targetDate ? parseISO(targetDate) : activeDrag.initialDate
       nextDrag.offsetX = targetColumn ? targetColumn.getBoundingClientRect().left - activeDrag.originLeft : 0
@@ -161,13 +162,13 @@ function TimeGrid({ days, events, settings, searchQuery, onOpenEvent, onTimeSlot
               {hours.map((hour) => <button key={hour} aria-label={`Create event at ${format(day, "MMMM d")} ${formatEventTime(`${String(hour).padStart(2, "0")}:00`, settings.timeFormat)}`} onClick={() => onTimeSlot(day, `${String(hour).padStart(2, "0")}:00`)} className="block h-16 w-full border-b border-white/10 text-left transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-300" />)}
               {timedEvents.map((event) => {
                 const isDragging = dragging?.event.id === event.id
-                const displayEnd = isDragging ? dragging.previewEnd : timeToMinutes(event.endTime)
+                const displayEnd = isDragging && dragging.mode === "resize" ? dragging.previewEnd : timeToMinutes(event.endTime)
                 const top = ((timeToMinutes(event.startTime) - 7 * 60) / 60) * hourHeight
                 const height = Math.max(((displayEnd - timeToMinutes(event.startTime)) / 60) * hourHeight, 25)
                 const transform = isDragging ? `translate(${dragging.offsetX}px, ${dragging.mode === "move" ? dragging.offsetY : 0}px)` : undefined
                 return <div key={event.id} role="button" tabIndex={0} onClick={(clickEvent) => { clickEvent.stopPropagation(); if (!ignoreClickRef.current) onOpenEvent(event) }} onKeyDown={(keyboardEvent) => { if (keyboardEvent.key === "Enter") onOpenEvent(event) }} onPointerDown={(pointerEvent) => beginPointer(pointerEvent, event, day, "move")} onPointerMove={updatePointer} onPointerUp={finishPointer} onPointerCancel={cancelPointer} className={`absolute left-1 right-1 touch-none select-none overflow-hidden rounded-md p-1.5 text-left text-xs text-white shadow-md transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white ${isDragging ? "z-20 cursor-grabbing opacity-90 transition-none" : "z-10 cursor-grab"} ${calendarColor[event.calendar] || "bg-blue-500"} ${searchClass(event, searchQuery)}`} style={{ top: `${top}px`, height: `${height}px`, transform }}>
                   <span className="block truncate font-semibold">{event.title}</span><span className="block truncate text-[10px] opacity-85">{formatEventRange({ ...event, endTime: minutesToTime(displayEnd) }, settings.timeFormat)}</span>
-                  <div role="separator" aria-label={`Resize ${event.title}`} title="Drag to resize" onPointerDown={(pointerEvent) => { pointerEvent.stopPropagation(); beginPointer(pointerEvent, event, day, "resize") }} onPointerMove={(pointerEvent) => { pointerEvent.stopPropagation(); updatePointer(pointerEvent) }} onPointerUp={(pointerEvent) => { pointerEvent.stopPropagation(); finishPointer(pointerEvent) }} onPointerCancel={cancelPointer} className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize bg-white/0 hover:bg-white/30" />
+                  <div role="separator" aria-label={`Resize ${event.title}`} title="Drag the bottom edge to resize" onPointerDown={(pointerEvent) => { pointerEvent.stopPropagation(); beginPointer(pointerEvent, event, day, "resize") }} onPointerMove={(pointerEvent) => { pointerEvent.stopPropagation(); updatePointer(pointerEvent) }} onPointerUp={(pointerEvent) => { pointerEvent.stopPropagation(); finishPointer(pointerEvent) }} onPointerCancel={cancelPointer} className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize border-t border-white/30 bg-white/10 hover:bg-white/35" />
                 </div>
               })}
             </div>
