@@ -25,7 +25,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onChange }: Setti
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md border-white/20 bg-slate-950/95 text-white backdrop-blur-xl">
+      <DialogContent className="max-w-md border-white/20 bg-slate-950/25 text-white backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription className="text-white/65">Changes are saved automatically to this device.</DialogDescription>
