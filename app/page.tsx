@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { addDays, addMonths, addWeeks, addYears, endOfWeek, format, isSameDay, isSameMonth, isSameYear, isToday, startOfDay, startOfWeek } from "date-fns"
-import { ChevronLeft, ChevronRight, Menu, Search, Settings, Sparkles, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Menu, Moon, MoonStar, Search, Settings, Sparkles, Sun, Sunrise, Sunset, X } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { DayView, MonthView, WeekView, YearView } from "@/components/calendar/calendar-views"
@@ -15,6 +15,16 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/sonner"
 import { calendars, createSampleEvents, defaultSettings, eventDate, eventStart, formatEventTime, matchesSearch, type CalendarEvent, type CalendarSettings, type CalendarView } from "@/lib/calendar"
+import { dayPeriods, getDayPeriod, periodGradients, periodTints, scenes, type DayPeriod } from "@/lib/scenes"
+
+const periodIcons: Record<DayPeriod, typeof Sun> = {
+  dawn: Sunrise,
+  morning: Sun,
+  midday: Sun,
+  golden: Sunset,
+  dusk: MoonStar,
+  night: Moon,
+}
 
 const EVENTS_STORAGE_KEY = "glass-calendar-events"
 const SETTINGS_STORAGE_KEY = "glass-calendar-settings"
@@ -50,6 +60,8 @@ export default function Home() {
   const [typedText, setTypedText] = useState("")
   const [currentDate, setCurrentDate] = useState(() => new Date())
   const [miniDate, setMiniDate] = useState(() => new Date())
+  const [now, setNow] = useState(() => new Date())
+  const [previewPeriod, setPreviewPeriod] = useState<DayPeriod | null>(null)
   const [view, setView] = useState<CalendarView>("week")
   const [events, setEvents] = useState<CalendarEvent[]>(() => createSampleEvents(new Date()))
   const [settings, setSettings] = useState<CalendarSettings>(defaultSettings)
@@ -70,6 +82,11 @@ export default function Home() {
     setIsLoaded(true)
     const popupTimer = window.setTimeout(() => setShowAIPopup(true), 3000)
     return () => window.clearTimeout(popupTimer)
+  }, [])
+
+  useEffect(() => {
+    const clockTimer = window.setInterval(() => setNow(new Date()), 60000)
+    return () => window.clearInterval(clockTimer)
   }, [])
 
   useEffect(() => {
@@ -190,6 +207,13 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown)
   })
 
+  const activeScene = useMemo(() => scenes.find((scene) => scene.id === settings.scene) ?? scenes[0], [settings.scene])
+  const livePeriod = useMemo(() => getDayPeriod(now), [now])
+  const activePeriod = previewPeriod ?? livePeriod
+  const litPeriod = settings.dynamicLighting ? activePeriod : "midday"
+  const PeriodIcon = periodIcons[activePeriod]
+  const periodLabel = dayPeriods.find((period) => period.id === activePeriod)?.label ?? ""
+
   const sidebarProps = {
     miniDate,
     currentDate,
@@ -205,7 +229,11 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-slate-950">
-      <Image src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop" alt="Mountain landscape" fill className="object-cover" priority />
+      {activeScene.image && <Image key={activeScene.id} src={activeScene.image} alt={`${activeScene.name} backdrop`} fill className="object-cover" priority />}
+      <div
+        className="absolute inset-0 transition-[background] duration-1000 ease-in-out"
+        style={{ background: activeScene.image ? periodTints[litPeriod] : periodGradients[litPeriod] }}
+      />
       <div className={`absolute inset-0 ${mounted && resolvedTheme === "dark" ? "bg-slate-950/45" : "bg-sky-950/15"}`} />
 
       <header className={`relative z-30 flex min-h-20 items-center justify-between gap-4 px-4 py-4 sm:px-8 opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.2s" }}>
@@ -221,6 +249,10 @@ export default function Home() {
               <Command><CommandList><CommandGroup heading="Matching events">{searchResults.map((event) => <CommandItem key={event.id} value={event.title} onSelect={() => { goToDate(eventDate(event)); setSearchQuery("") }}><span className="truncate">{event.title}</span><span className="ml-auto text-xs text-muted-foreground">{format(eventDate(event), "MMM d")}</span></CommandItem>)}</CommandGroup><CommandEmpty>No matching events.</CommandEmpty></CommandList></Command>
             </div>}
           </div>
+          {settings.dynamicLighting && <div className="hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur-sm sm:flex">
+            <PeriodIcon className="h-3.5 w-3.5" />
+            {periodLabel}{previewPeriod && <span className="text-white/60">· preview</span>}
+          </div>}
           <button onClick={() => setMobileSearchOpen((isOpen) => !isOpen)} aria-label="Search events" className="rounded-md p-1 text-white drop-shadow-md hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white sm:hidden"><Search className="h-6 w-6" /></button>
           <button onClick={() => setSettingsOpen(true)} aria-label="Settings" className="rounded-md p-1 text-white drop-shadow-md hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"><Settings className="h-6 w-6" /></button>
           <ProfileMenu />
@@ -267,7 +299,7 @@ export default function Home() {
       </div>}
 
       <EventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} event={editingEvent} initialDate={draftDate} initialTime={draftTime} settings={settings} onSave={(nextEvent) => setEvents((previous) => previous.some((event) => event.id === nextEvent.id) ? previous.map((event) => event.id === nextEvent.id ? nextEvent : event) : [...previous, nextEvent])} onDelete={(id) => setEvents((previous) => previous.filter((event) => event.id !== id))} />
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} settings={settings} onChange={setSettings} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} settings={settings} onChange={setSettings} previewPeriod={previewPeriod} onPreviewPeriod={setPreviewPeriod} />
       <Toaster position="bottom-center" richColors />
     </div>
   )

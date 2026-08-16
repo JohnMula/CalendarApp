@@ -1,5 +1,7 @@
 import { addDays, format, parseISO, setHours, setMinutes } from "date-fns"
 
+import type { SceneId } from "@/lib/scenes"
+
 export type CalendarView = "day" | "week" | "month" | "year"
 export type TimeFormat = "12" | "24"
 
@@ -30,6 +32,8 @@ export type CalendarSettings = {
   weekStartsOn: 0 | 1
   timeFormat: TimeFormat
   defaultDuration: 30 | 60
+  scene: SceneId
+  dynamicLighting: boolean
 }
 
 export const calendars = [
@@ -45,6 +49,8 @@ export const defaultSettings: CalendarSettings = {
   weekStartsOn: 0,
   timeFormat: "12",
   defaultDuration: 60,
+  scene: "mountain",
+  dynamicLighting: true,
 }
 
 export const eventDate = (event: CalendarEvent) => parseISO(event.date)
