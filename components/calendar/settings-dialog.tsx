@@ -17,9 +17,11 @@ type SettingsDialogProps = {
   onChange: (settings: CalendarSettings) => void
   previewPeriod: DayPeriod | null
   onPreviewPeriod: (period: DayPeriod | null) => void
+  weatherStatusText: string
+  onLiveWeatherChange: (checked: boolean) => void
 }
 
-export function SettingsDialog({ open, onOpenChange, settings, onChange, previewPeriod, onPreviewPeriod }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, settings, onChange, previewPeriod, onPreviewPeriod, weatherStatusText, onLiveWeatherChange }: SettingsDialogProps) {
   const { setTheme } = useTheme()
   const update = <K extends keyof CalendarSettings>(key: K, value: CalendarSettings[K]) => {
     const next = { ...settings, [key]: value }
@@ -65,6 +67,13 @@ export function SettingsDialog({ open, onOpenChange, settings, onChange, preview
               {dayPeriods.map((period) => <button key={period.id} type="button" onClick={() => onPreviewPeriod(period.id)} className={`rounded-full px-3 py-1 text-xs font-medium transition ${previewPeriod === period.id ? "bg-blue-500 text-white" : "bg-white/10 text-white/80 hover:bg-white/20"}`}>{period.label}</button>)}
             </div>
           </section>}
+          <section className="flex items-center justify-between gap-4">
+            <div>
+              <Label className="text-white">Live weather</Label>
+              <p className="text-xs text-white/60">{weatherStatusText}</p>
+            </div>
+            <Switch checked={settings.liveWeather} onCheckedChange={onLiveWeatherChange} className="shrink-0 data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-white/20" />
+          </section>
           <section className="space-y-2">
             <Label className="text-white">Default view on load</Label>
             <ToggleGroup type="single" value={settings.defaultView} onValueChange={(value) => value && update("defaultView", value as CalendarView)} className="justify-start rounded-lg bg-white/10 p-1">

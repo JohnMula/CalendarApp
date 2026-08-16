@@ -34,6 +34,7 @@ export type CalendarSettings = {
   defaultDuration: 30 | 60
   scene: SceneId
   dynamicLighting: boolean
+  liveWeather: boolean
 }
 
 export const calendars = [
@@ -51,6 +52,7 @@ export const defaultSettings: CalendarSettings = {
   defaultDuration: 60,
   scene: "mountain",
   dynamicLighting: true,
+  liveWeather: false,
 }
 
 export const eventDate = (event: CalendarEvent) => parseISO(event.date)

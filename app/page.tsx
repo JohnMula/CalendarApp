@@ -3,19 +3,32 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { addDays, addMonths, addWeeks, addYears, endOfWeek, format, isSameDay, isSameMonth, isSameYear, isToday, startOfDay, startOfWeek } from "date-fns"
-import { ChevronLeft, ChevronRight, Menu, Moon, MoonStar, Search, Settings, Sparkles, Sun, Sunrise, Sunset, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, Menu, Moon, MoonStar, Search, Settings, Sparkles, Sun, Sunrise, Sunset, X } from "lucide-react"
 import { useTheme } from "next-themes"
+import { toast } from "sonner"
 
 import { DayView, MonthView, WeekView, YearView } from "@/components/calendar/calendar-views"
 import { EventDialog } from "@/components/calendar/event-dialog"
 import { ProfileMenu } from "@/components/calendar/profile-menu"
 import { CalendarSidebar } from "@/components/calendar/sidebar"
 import { SettingsDialog } from "@/components/calendar/settings-dialog"
+import { WeatherOverlay } from "@/components/calendar/weather-overlay"
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/sonner"
+import { useGeolocation } from "@/hooks/use-geolocation"
 import { calendars, createSampleEvents, defaultSettings, eventDate, eventStart, formatEventTime, matchesSearch, type CalendarEvent, type CalendarSettings, type CalendarView } from "@/lib/calendar"
 import { dayPeriods, getDayPeriod, periodGradients, periodTints, scenes, type DayPeriod } from "@/lib/scenes"
+import { conditionLabels, fetchWeather, type WeatherCondition, type WeatherSnapshot } from "@/lib/weather"
+
+const weatherIcons: Record<WeatherCondition, typeof Sun> = {
+  clear: Sun,
+  cloudy: Cloud,
+  fog: CloudFog,
+  rain: CloudRain,
+  snow: CloudSnow,
+  thunderstorm: CloudLightning,
+}
 
 const periodIcons: Record<DayPeriod, typeof Sun> = {
   dawn: Sunrise,
@@ -75,6 +88,8 @@ export default function Home() {
   const [draftTime, setDraftTime] = useState<string | undefined>()
   const [searchQuery, setSearchQuery] = useState("")
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [weather, setWeather] = useState<WeatherSnapshot | null>(null)
+  const geo = useGeolocation()
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -113,6 +128,64 @@ export default function Home() {
     window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings))
     window.localStorage.setItem(VISIBILITY_STORAGE_KEY, JSON.stringify(visibleCalendars))
   }, [events, hydrated, settings, visibleCalendars])
+
+  // If live weather was already on from a previous visit, pick the location prompt back up.
+  useEffect(() => {
+    if (hydrated && settings.liveWeather && geo.status === "idle") geo.request()
+  }, [hydrated, settings.liveWeather, geo.status])
+
+  // Fetch weather once we have coordinates, then refresh periodically while the toggle stays on.
+  useEffect(() => {
+    if (!settings.liveWeather || geo.status !== "granted" || !geo.coords) return
+    let cancelled = false
+    const controller = new AbortController()
+    const { latitude, longitude } = geo.coords
+
+    const load = async () => {
+      try {
+        const snapshot = await fetchWeather(latitude, longitude, controller.signal)
+        if (!cancelled) setWeather(snapshot)
+      } catch {
+        // Keep whatever we last had rather than interrupting the view with an error.
+      }
+    }
+
+    load()
+    const interval = window.setInterval(load, 15 * 60 * 1000)
+    return () => {
+      cancelled = true
+      controller.abort()
+      window.clearInterval(interval)
+    }
+  }, [settings.liveWeather, geo.status, geo.coords])
+
+  // If location access fails while the toggle is on, turn it back off and explain why.
+  useEffect(() => {
+    if (!settings.liveWeather) return
+    if (geo.status === "denied") {
+      setSettings((previous) => ({ ...previous, liveWeather: false }))
+      toast.error("Location access is off, so live weather can't show. Enable it in your browser's site settings to try again.")
+    } else if (geo.status === "unsupported") {
+      setSettings((previous) => ({ ...previous, liveWeather: false }))
+      toast.error("Your browser doesn't support location, so live weather isn't available.")
+    } else if (geo.status === "error") {
+      setSettings((previous) => ({ ...previous, liveWeather: false }))
+      toast.error("Couldn't determine your location. Live weather is off.")
+    }
+  }, [geo.status, settings.liveWeather])
+
+  const handleLiveWeatherChange = (checked: boolean) => {
+    setSettings((previous) => ({ ...previous, liveWeather: checked }))
+    if (checked) geo.request()
+    else setWeather(null)
+  }
+
+  const weatherStatusText = useMemo(() => {
+    if (!settings.liveWeather) return "Shows real rain, snow, or fog drifting over your scene based on your location."
+    if (geo.status === "loading") return "Finding your location…"
+    if (weather) return `Right now: ${conditionLabels[weather.condition].toLowerCase()}, ${Math.round(weather.temperatureC)}°C near you.`
+    return "Checking the weather near you…"
+  }, [settings.liveWeather, geo.status, weather])
 
   const openCreate = (date = currentDate, time?: string) => {
     setEditingEvent(null)
@@ -213,6 +286,7 @@ export default function Home() {
   const litPeriod = settings.dynamicLighting ? activePeriod : "midday"
   const PeriodIcon = periodIcons[activePeriod]
   const periodLabel = dayPeriods.find((period) => period.id === activePeriod)?.label ?? ""
+  const WeatherIcon = weather ? weatherIcons[weather.condition] : Cloud
 
   const sidebarProps = {
     miniDate,
@@ -235,6 +309,7 @@ export default function Home() {
         style={{ background: activeScene.image ? periodTints[litPeriod] : periodGradients[litPeriod] }}
       />
       <div className={`absolute inset-0 ${mounted && resolvedTheme === "dark" ? "bg-slate-950/45" : "bg-sky-950/15"}`} />
+      <WeatherOverlay condition={settings.liveWeather ? weather?.condition ?? null : null} />
 
       <header className={`relative z-30 flex min-h-20 items-center justify-between gap-4 px-4 py-4 sm:px-8 opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.2s" }}>
         <div className="flex items-center gap-3">
@@ -249,9 +324,11 @@ export default function Home() {
               <Command><CommandList><CommandGroup heading="Matching events">{searchResults.map((event) => <CommandItem key={event.id} value={event.title} onSelect={() => { goToDate(eventDate(event)); setSearchQuery("") }}><span className="truncate">{event.title}</span><span className="ml-auto text-xs text-muted-foreground">{format(eventDate(event), "MMM d")}</span></CommandItem>)}</CommandGroup><CommandEmpty>No matching events.</CommandEmpty></CommandList></Command>
             </div>}
           </div>
-          {settings.dynamicLighting && <div className="hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur-sm sm:flex">
-            <PeriodIcon className="h-3.5 w-3.5" />
-            {periodLabel}{previewPeriod && <span className="text-white/60">· preview</span>}
+          {(settings.dynamicLighting || (settings.liveWeather && weather)) && <div className="hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur-sm sm:flex">
+            {settings.dynamicLighting && <><PeriodIcon className="h-3.5 w-3.5" /><span>{periodLabel}</span>{previewPeriod && <span className="text-white/60">· preview</span>}</>}
+            {settings.liveWeather && weather && <span className={`flex items-center gap-1.5 ${settings.dynamicLighting ? "ml-0.5 border-l border-white/20 pl-2" : ""}`}>
+              <WeatherIcon className="h-3.5 w-3.5" />{Math.round(weather.temperatureC)}°C
+            </span>}
           </div>}
           <button onClick={() => setMobileSearchOpen((isOpen) => !isOpen)} aria-label="Search events" className="rounded-md p-1 text-white drop-shadow-md hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white sm:hidden"><Search className="h-6 w-6" /></button>
           <button onClick={() => setSettingsOpen(true)} aria-label="Settings" className="rounded-md p-1 text-white drop-shadow-md hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"><Settings className="h-6 w-6" /></button>
@@ -299,7 +376,7 @@ export default function Home() {
       </div>}
 
       <EventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} event={editingEvent} initialDate={draftDate} initialTime={draftTime} settings={settings} onSave={(nextEvent) => setEvents((previous) => previous.some((event) => event.id === nextEvent.id) ? previous.map((event) => event.id === nextEvent.id ? nextEvent : event) : [...previous, nextEvent])} onDelete={(id) => setEvents((previous) => previous.filter((event) => event.id !== id))} />
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} settings={settings} onChange={setSettings} previewPeriod={previewPeriod} onPreviewPeriod={setPreviewPeriod} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} settings={settings} onChange={setSettings} previewPeriod={previewPeriod} onPreviewPeriod={setPreviewPeriod} weatherStatusText={weatherStatusText} onLiveWeatherChange={handleLiveWeatherChange} />
       <Toaster position="bottom-center" richColors />
     </div>
   )
