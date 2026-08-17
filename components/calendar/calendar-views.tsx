@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, isToday, parseISO, startOfMonth, startOfWeek, startOfYear } from "date-fns"
 
 import type { CalendarEvent, CalendarSettings } from "@/lib/calendar"
@@ -13,22 +13,29 @@ type SharedProps = {
   onOpenEvent: (event: CalendarEvent) => void
 }
 
+// Kept in sync with the palette in lib/calendar.ts. "My Calendar" uses cyan
+// rather than the app's own accent blue so event chips never blend into
+// buttons, focus rings, or "today" highlights, which are all blue-500.
 const calendarColor: Record<string, string> = {
-  "my-calendar": "bg-blue-500",
+  "my-calendar": "bg-cyan-500",
   work: "bg-emerald-500",
   personal: "bg-purple-500",
   family: "bg-orange-500",
 }
+const defaultCalendarColor = "bg-cyan-500"
 
 const searchClass = (event: CalendarEvent, searchQuery: string) => {
   if (!searchQuery.trim()) return ""
   return matchesSearch(event, searchQuery) ? "z-10 ring-2 ring-amber-200 opacity-100" : "opacity-35"
 }
 
-const hours = Array.from({ length: 13 }, (_, index) => index + 7)
+const hours = Array.from({ length: 24 }, (_, index) => index)
 const hourHeight = 64
 const snapMinutes = 15
 const lastTimeSlot = 23 * 60 + 45
+const businessHours = { start: 7, end: 20 }
+const isBusinessHour = (hour: number) => hour >= businessHours.start && hour < businessHours.end
+const scrollPaddingHours = 1.5
 
 type DragState = {
   event: CalendarEvent
@@ -59,6 +66,19 @@ function TimeGrid({ days, events, settings, searchQuery, onOpenEvent, onTimeSlot
   const [dragging, setDragging] = useState<DragState | null>(null)
   const dragRef = useRef<DragState | null>(null)
   const ignoreClickRef = useRef(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const daysKey = days.map((day) => day.toISOString()).join(",")
+
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const now = new Date()
+    const showsToday = days.some((day) => isToday(day))
+    const targetMinutes = showsToday ? now.getHours() * 60 + now.getMinutes() : businessHours.start * 60
+    const targetTop = (targetMinutes / 60) * hourHeight - scrollPaddingHours * hourHeight
+    container.scrollTop = Math.max(targetTop, 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [daysKey])
 
   const beginPointer = (pointerEvent: ReactPointerEvent<HTMLElement>, event: CalendarEvent, day: Date, mode: DragState["mode"]) => {
     if (pointerEvent.button !== 0) return
@@ -137,44 +157,54 @@ function TimeGrid({ days, events, settings, searchQuery, onOpenEvent, onTimeSlot
   }
 
   const minGridWidth = 56 + days.length * 120
+  const now = new Date()
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
 
   return (
-    <div className="overflow-auto">
-      <div className="overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg" style={{ minWidth: `${minGridWidth}px` }}>
-        <div className="grid border-b border-white/20" style={gridStyle}>
-          <div />
-          {days.map((day) => <div key={day.toISOString()} className="border-l border-white/20 p-2 text-center">
-            <div className="text-xs font-medium text-white/70">{format(day, "EEE").toUpperCase()}</div>
-            <div className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-lg font-medium text-white ${isToday(day) ? "bg-blue-500" : ""}`}>{format(day, "d")}</div>
-          </div>)}
-        </div>
-        <div className="grid border-b border-white/15" style={gridStyle}>
-          <div className="p-2 text-right text-xs text-white/45">All day</div>
-          {days.map((day) => <div key={day.toISOString()} className="min-h-10 border-l border-white/15 p-1">
-            {events.filter((event) => event.allDay && isSameDay(eventDate(event), day)).map((event) => <EventChip key={event.id} event={event} settings={settings} searchQuery={searchQuery} onOpenEvent={onOpenEvent} compact />)}
-          </div>)}
-        </div>
-        <div className="grid" style={gridStyle}>
-          <div className="text-white/70">
-            {hours.map((hour) => <div key={hour} className="h-16 border-b border-white/10 pr-2 pt-1 text-right text-xs">{formatEventTime(`${String(hour).padStart(2, "0")}:00`, settings.timeFormat)}</div>)}
-          </div>
-          {days.map((day) => {
-            const timedEvents = events.filter((event) => !event.allDay && isSameDay(eventDate(event), day))
-            return <div key={day.toISOString()} data-calendar-day={format(day, "yyyy-MM-dd")} className="relative border-l border-white/20">
-              {hours.map((hour) => <button key={hour} aria-label={`Create event at ${format(day, "MMMM d")} ${formatEventTime(`${String(hour).padStart(2, "0")}:00`, settings.timeFormat)}`} onClick={() => onTimeSlot(day, `${String(hour).padStart(2, "0")}:00`)} className="block h-16 w-full border-b border-white/10 text-left transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-300" />)}
-              {timedEvents.map((event) => {
-                const isDragging = dragging?.event.id === event.id
-                const displayEnd = isDragging && dragging.mode === "resize" ? dragging.previewEnd : timeToMinutes(event.endTime)
-                const top = ((timeToMinutes(event.startTime) - 7 * 60) / 60) * hourHeight
-                const height = Math.max(((displayEnd - timeToMinutes(event.startTime)) / 60) * hourHeight, 25)
-                const transform = isDragging ? `translate(${dragging.offsetX}px, ${dragging.mode === "move" ? dragging.offsetY : 0}px)` : undefined
-                return <div key={event.id} role="button" tabIndex={0} onClick={(clickEvent) => { clickEvent.stopPropagation(); if (!ignoreClickRef.current) onOpenEvent(event) }} onKeyDown={(keyboardEvent) => { if (keyboardEvent.key === "Enter") onOpenEvent(event) }} onPointerDown={(pointerEvent) => beginPointer(pointerEvent, event, day, "move")} onPointerMove={updatePointer} onPointerUp={finishPointer} onPointerCancel={cancelPointer} className={`absolute left-1 right-1 touch-none select-none overflow-hidden rounded-md p-1.5 text-left text-xs text-white shadow-md transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white ${isDragging ? "z-20 cursor-grabbing opacity-90 transition-none" : "z-10 cursor-grab"} ${calendarColor[event.calendar] || "bg-blue-500"} ${searchClass(event, searchQuery)}`} style={{ top: `${top}px`, height: `${height}px`, transform }}>
-                  <span className="block truncate font-semibold">{event.title}</span><span className="block truncate text-[10px] opacity-85">{formatEventRange({ ...event, endTime: minutesToTime(displayEnd) }, settings.timeFormat)}</span>
-                  <div role="separator" aria-label={`Resize ${event.title}`} title="Drag the bottom edge to resize" onPointerDown={(pointerEvent) => { pointerEvent.stopPropagation(); beginPointer(pointerEvent, event, day, "resize") }} onPointerMove={(pointerEvent) => { pointerEvent.stopPropagation(); updatePointer(pointerEvent) }} onPointerUp={(pointerEvent) => { pointerEvent.stopPropagation(); finishPointer(pointerEvent) }} onPointerCancel={cancelPointer} className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize border-t border-white/30 bg-white/10 hover:bg-white/35" />
-                </div>
-              })}
+    <div className="overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg">
+      <div ref={scrollRef} className="max-h-[min(70vh,640px)] overflow-auto">
+        <div style={{ minWidth: `${minGridWidth}px` }}>
+          <div className="sticky top-0 z-20 bg-slate-950/40 backdrop-blur-lg">
+            <div className="grid border-b border-white/20" style={gridStyle}>
+              <div />
+              {days.map((day) => <div key={day.toISOString()} className="border-l border-white/20 p-2 text-center">
+                <div className="text-xs font-medium text-white/70">{format(day, "EEE").toUpperCase()}</div>
+                <div className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-lg font-medium text-white ${isToday(day) ? "bg-blue-500" : ""}`}>{format(day, "d")}</div>
+              </div>)}
             </div>
-          })}
+            <div className="grid border-b border-white/15" style={gridStyle}>
+              <div className="p-2 text-right text-xs text-white/45">All day</div>
+              {days.map((day) => <div key={day.toISOString()} className="min-h-10 border-l border-white/15 p-1">
+                {events.filter((event) => event.allDay && isSameDay(eventDate(event), day)).map((event) => <EventChip key={event.id} event={event} settings={settings} searchQuery={searchQuery} onOpenEvent={onOpenEvent} compact />)}
+              </div>)}
+            </div>
+          </div>
+          <div className="grid" style={gridStyle}>
+            <div className="text-white/70">
+              {hours.map((hour) => <div key={hour} className={`h-16 border-b border-white/10 pr-2 pt-1 text-right text-xs ${isBusinessHour(hour) ? "" : "bg-black/10"}`}>{formatEventTime(`${String(hour).padStart(2, "0")}:00`, settings.timeFormat)}</div>)}
+            </div>
+            {days.map((day) => {
+              const timedEvents = events.filter((event) => !event.allDay && isSameDay(eventDate(event), day))
+              return <div key={day.toISOString()} data-calendar-day={format(day, "yyyy-MM-dd")} className="relative border-l border-white/20">
+                {hours.map((hour) => <button key={hour} aria-label={`Create event at ${format(day, "MMMM d")} ${formatEventTime(`${String(hour).padStart(2, "0")}:00`, settings.timeFormat)}`} onClick={() => onTimeSlot(day, `${String(hour).padStart(2, "0")}:00`)} className={`block h-16 w-full border-b border-white/10 text-left transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-300 ${isBusinessHour(hour) ? "" : "bg-black/10"}`} />)}
+                {timedEvents.map((event) => {
+                  const isDragging = dragging?.event.id === event.id
+                  const displayEnd = isDragging && dragging.mode === "resize" ? dragging.previewEnd : timeToMinutes(event.endTime)
+                  const top = (timeToMinutes(event.startTime) / 60) * hourHeight
+                  const height = Math.max(((displayEnd - timeToMinutes(event.startTime)) / 60) * hourHeight, 25)
+                  const transform = isDragging ? `translate(${dragging.offsetX}px, ${dragging.mode === "move" ? dragging.offsetY : 0}px)` : undefined
+                  return <div key={event.id} role="button" tabIndex={0} onClick={(clickEvent) => { clickEvent.stopPropagation(); if (!ignoreClickRef.current) onOpenEvent(event) }} onKeyDown={(keyboardEvent) => { if (keyboardEvent.key === "Enter") onOpenEvent(event) }} onPointerDown={(pointerEvent) => beginPointer(pointerEvent, event, day, "move")} onPointerMove={updatePointer} onPointerUp={finishPointer} onPointerCancel={cancelPointer} className={`absolute left-1 right-1 touch-none select-none overflow-hidden rounded-md p-1.5 text-left text-xs text-white shadow-md transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white ${isDragging ? "z-20 cursor-grabbing opacity-90 transition-none" : "z-10 cursor-grab"} ${calendarColor[event.calendar] || defaultCalendarColor} ${searchClass(event, searchQuery)}`} style={{ top: `${top}px`, height: `${height}px`, transform }}>
+                    <span className="block truncate font-semibold">{event.title}</span><span className="block truncate text-[10px] opacity-85">{formatEventRange({ ...event, endTime: minutesToTime(displayEnd) }, settings.timeFormat)}</span>
+                    <div role="separator" aria-label={`Resize ${event.title}`} title="Drag the bottom edge to resize" onPointerDown={(pointerEvent) => { pointerEvent.stopPropagation(); beginPointer(pointerEvent, event, day, "resize") }} onPointerMove={(pointerEvent) => { pointerEvent.stopPropagation(); updatePointer(pointerEvent) }} onPointerUp={(pointerEvent) => { pointerEvent.stopPropagation(); finishPointer(pointerEvent) }} onPointerCancel={cancelPointer} className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize border-t border-white/30 bg-white/10 hover:bg-white/35" />
+                  </div>
+                })}
+                {isToday(day) && <div className="pointer-events-none absolute left-0 right-0 z-10 flex items-center" style={{ top: `${(nowMinutes / 60) * hourHeight}px` }}>
+                  <span className="h-2 w-2 shrink-0 -translate-x-1 rounded-full bg-red-500" />
+                  <span className="h-px flex-1 bg-red-500/70" />
+                </div>}
+              </div>
+            })}
+          </div>
         </div>
       </div>
     </div>
@@ -182,8 +212,8 @@ function TimeGrid({ days, events, settings, searchQuery, onOpenEvent, onTimeSlot
 }
 
 function EventChip({ event, settings, searchQuery, onOpenEvent, compact = false }: { event: CalendarEvent; settings: CalendarSettings; searchQuery: string; onOpenEvent: (event: CalendarEvent) => void; compact?: boolean }) {
-  return <button onClick={(clickEvent) => { clickEvent.stopPropagation(); onOpenEvent(event) }} className={`flex w-full items-center gap-1 rounded px-1.5 py-1 text-left text-xs text-white transition hover:bg-white/20 ${searchClass(event, searchQuery)}`}>
-    <span className={`h-2 w-2 shrink-0 rounded-full ${calendarColor[event.calendar] || "bg-blue-500"}`} />
+  return <button onClick={(clickEvent) => { clickEvent.stopPropagation(); onOpenEvent(event) }} className={`flex w-full items-center gap-1 rounded px-1.5 py-1 text-left text-xs text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white ${searchClass(event, searchQuery)}`}>
+    <span className={`h-2 w-2 shrink-0 rounded-full ${calendarColor[event.calendar] || defaultCalendarColor}`} />
     <span className="truncate">{compact ? event.title : `${event.allDay ? "All day" : formatEventTime(event.startTime, settings.timeFormat)} ${event.title}`}</span>
   </button>
 }

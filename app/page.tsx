@@ -14,7 +14,7 @@ import { CalendarSidebar } from "@/components/calendar/sidebar"
 import { SettingsDialog } from "@/components/calendar/settings-dialog"
 import { WeatherOverlay } from "@/components/calendar/weather-overlay"
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/sonner"
 import { useGeolocation } from "@/hooks/use-geolocation"
 import { calendars, createSampleEvents, defaultSettings, eventDate, eventStart, formatEventTime, matchesSearch, type CalendarEvent, type CalendarSettings, type CalendarView } from "@/lib/calendar"
@@ -342,7 +342,13 @@ export default function Home() {
 
       <main className="relative z-10 flex min-h-[calc(100dvh-5rem)]">
         <div className={`hidden w-64 shrink-0 border-r border-white/20 bg-white/10 shadow-xl backdrop-blur-lg lg:block opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.4s" }}><CalendarSidebar {...sidebarProps} /></div>
-        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}><SheetContent side="left" className="w-[18rem] max-w-[85vw] border-white/20 bg-slate-950/95 p-0"><CalendarSidebar {...sidebarProps} /></SheetContent></Sheet>
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="w-[18rem] max-w-[85vw] border-white/20 bg-slate-950/95 p-0">
+            <SheetTitle className="sr-only">Calendar menu</SheetTitle>
+            <SheetDescription className="sr-only">Browse your calendars and jump to today.</SheetDescription>
+            <CalendarSidebar {...sidebarProps} />
+          </SheetContent>
+        </Sheet>
 
         <section className={`flex min-w-0 flex-1 flex-col opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.6s" }}>
           <div className="flex flex-col gap-3 border-b border-white/20 p-4 xl:flex-row xl:items-center xl:justify-between">
@@ -371,7 +377,7 @@ export default function Home() {
         <div className="relative rounded-2xl border border-blue-300/30 bg-gradient-to-br from-blue-400/30 via-blue-500/30 to-blue-600/30 p-5 text-white shadow-xl backdrop-blur-lg sm:p-6">
           <button onClick={() => setShowAIPopup(false)} aria-label="Close assistant suggestion" className="absolute right-2 top-2 rounded p-1.5 text-white/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"><X className="h-5 w-5" /></button>
           <div className="flex gap-3"><Sparkles className="mt-1 h-5 w-5 shrink-0 text-blue-200" /><div><p className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-100/80">Calendar assistant</p><p className="min-h-16 text-sm font-light sm:text-base">{typedText}</p></div></div>
-          <div className="mt-5 flex gap-3"><button onClick={() => { if (assistantSuggestion.event) goToDate(eventDate(assistantSuggestion.event)); else openCreate(); setShowAIPopup(false) }} className="flex-1 rounded-xl bg-white/20 py-2.5 text-sm font-medium hover:bg-white/30">{assistantSuggestion.action}</button><button onClick={() => setShowAIPopup(false)} className="flex-1 rounded-xl bg-white/10 py-2.5 text-sm font-medium hover:bg-white/20">Dismiss</button></div>
+          <div className="mt-5 flex gap-3"><button onClick={() => { if (assistantSuggestion.event) goToDate(eventDate(assistantSuggestion.event)); else openCreate(); setShowAIPopup(false) }} className="flex-1 rounded-xl bg-white/20 py-2.5 text-sm font-medium hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white">{assistantSuggestion.action}</button><button onClick={() => setShowAIPopup(false)} className="flex-1 rounded-xl bg-white/10 py-2.5 text-sm font-medium hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white">Dismiss</button></div>
         </div>
       </div>}
 

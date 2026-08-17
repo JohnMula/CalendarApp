@@ -6,6 +6,15 @@ import { ChevronLeft, ChevronRight, Clock, Plus } from "lucide-react"
 import type { CalendarEvent, CalendarSettings } from "@/lib/calendar"
 import { calendars, eventDate, eventStart, formatEventRange } from "@/lib/calendar"
 
+// Tints each calendar's checkbox to match its own swatch (see calendar.color
+// below) instead of every checkbox defaulting to the same blue.
+const calendarAccent: Record<string, string> = {
+  "my-calendar": "accent-cyan-500",
+  work: "accent-emerald-500",
+  personal: "accent-purple-500",
+  family: "accent-orange-500",
+}
+
 type SidebarProps = {
   miniDate: Date
   currentDate: Date
@@ -58,7 +67,7 @@ export function CalendarSidebar({ miniDate, currentDate, events, settings, visib
         <h2 className="mb-3 font-medium text-white">My calendars</h2>
         <div className="space-y-2.5">
           {calendars.map((calendar) => <label key={calendar.id} className="flex cursor-pointer items-center gap-3 text-sm text-white">
-            <input type="checkbox" checked={visibleCalendars[calendar.id] ?? true} onChange={(event) => onToggleCalendar(calendar.id, event.target.checked)} className="h-4 w-4 cursor-pointer rounded border-white/60 accent-blue-500 focus:outline-none focus:ring-2 focus:ring-white" />
+            <input type="checkbox" checked={visibleCalendars[calendar.id] ?? true} onChange={(event) => onToggleCalendar(calendar.id, event.target.checked)} className={`h-4 w-4 cursor-pointer rounded border-white/60 focus:outline-none focus:ring-2 focus:ring-white ${calendarAccent[calendar.id] || "accent-cyan-500"}`} />
             <span className={`h-3 w-3 rounded-sm ${calendar.color}`} />
             {calendar.name}
           </label>)}

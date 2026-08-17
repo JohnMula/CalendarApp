@@ -37,8 +37,11 @@ export type CalendarSettings = {
   liveWeather: boolean
 }
 
+// Each calendar's swatch is deliberately distinct from the app's own UI accent
+// color (blue-500, used for buttons/focus rings/"today" highlights) so an event
+// chip is never mistaken for interactive chrome.
 export const calendars = [
-  { id: "my-calendar", name: "My Calendar", color: "bg-blue-500" },
+  { id: "my-calendar", name: "My Calendar", color: "bg-cyan-500" },
   { id: "work", name: "Work", color: "bg-emerald-500" },
   { id: "personal", name: "Personal", color: "bg-purple-500" },
   { id: "family", name: "Family", color: "bg-orange-500" },

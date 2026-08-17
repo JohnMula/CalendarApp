@@ -330,7 +330,7 @@ export function EventDialog({
                   <Select value={calendar} onValueChange={setCalendar}>
                     <SelectTrigger className="border-white/20 bg-white/10 text-white"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {calendars.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
+                      {calendars.map((item) => <SelectItem key={item.id} value={item.id}><span className="flex items-center gap-2"><span className={`h-2 w-2 shrink-0 rounded-full ${item.color}`} />{item.name}</span></SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -369,7 +369,7 @@ export function EventDialog({
                     {attachments.map((attachment) => (
                       <div key={attachment.id} className="flex items-center justify-between gap-2 rounded-md border border-white/15 bg-white/10 px-3 py-2 text-sm text-white">
                         <span className="flex min-w-0 items-center gap-2 truncate"><Paperclip className="h-3.5 w-3.5 shrink-0 text-white/50" />{attachment.name}</span>
-                        <button type="button" onClick={() => removeAttachment(attachment.id)} aria-label={`Remove ${attachment.name}`} className="shrink-0 rounded p-0.5 text-white/60 hover:bg-white/10 hover:text-white"><X className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => removeAttachment(attachment.id)} aria-label={`Remove ${attachment.name}`} className="shrink-0 rounded p-0.5 text-white/60 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"><X className="h-3.5 w-3.5" /></button>
                       </div>
                     ))}
                   </div>
@@ -382,7 +382,7 @@ export function EventDialog({
                     placeholder="File or link name, e.g. Agenda.pdf"
                     className="border-white/20 bg-white/10 text-white placeholder:text-white/50"
                   />
-                  <button type="button" onClick={addAttachmentDraft} aria-label="Add attachment" className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/20 bg-white/10 px-3 text-sm text-white hover:bg-white/15">
+                  <button type="button" onClick={addAttachmentDraft} aria-label="Add attachment" className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/20 bg-white/10 px-3 text-sm text-white hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white">
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
@@ -390,13 +390,13 @@ export function EventDialog({
 
               <DialogFooter className="gap-2 sm:justify-between">
                 {event ? <AlertDialog>
-                  <AlertDialogTrigger asChild><button type="button" className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-red-300 hover:bg-red-500/15"><Trash2 className="h-4 w-4" />Delete</button></AlertDialogTrigger>
+                  <AlertDialogTrigger asChild><button type="button" className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-red-300 hover:bg-red-500/15 focus:outline-none focus:ring-2 focus:ring-red-300"><Trash2 className="h-4 w-4" />Delete</button></AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader><AlertDialogTitle>Delete this event?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
                     <AlertDialogFooter><AlertDialogCancel>Keep event</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => { onDelete(event.id); onOpenChange(false); toast.success("Event deleted") }}>Delete event</AlertDialogAction></AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog> : <span />}
-                <div className="flex gap-2"><button type="button" onClick={cancelEdit} className="rounded-md px-4 py-2 text-sm text-white/80 hover:bg-white/10">Cancel</button><button type="submit" className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400">{event ? "Save changes" : "Create event"}</button></div>
+                <div className="flex gap-2"><button type="button" onClick={cancelEdit} className="rounded-md px-4 py-2 text-sm text-white/80 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white">Cancel</button><button type="submit" className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300">{event ? "Save changes" : "Create event"}</button></div>
               </DialogFooter>
             </form>
           </>
