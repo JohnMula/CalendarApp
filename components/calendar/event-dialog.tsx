@@ -179,7 +179,7 @@ export function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-xl overflow-y-auto border-white/20 bg-slate-950/25 text-white backdrop-blur-xl">
+      <DialogContent className="max-h-[92dvh] max-w-xl overflow-y-auto border-white/20 bg-slate-950/25 text-white backdrop-blur-xl">
         {showView && event && (
           <div className="absolute right-12 top-4 z-10 flex items-center gap-1">
             <button

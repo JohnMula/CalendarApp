@@ -136,9 +136,11 @@ function TimeGrid({ days, events, settings, searchQuery, onOpenEvent, onTimeSlot
     setDragging(null)
   }
 
+  const minGridWidth = 56 + days.length * 120
+
   return (
     <div className="overflow-auto">
-      <div className="min-w-[620px] overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg">
+      <div className="overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg" style={{ minWidth: `${minGridWidth}px` }}>
         <div className="grid border-b border-white/20" style={gridStyle}>
           <div />
           {days.map((day) => <div key={day.toISOString()} className="border-l border-white/20 p-2 text-center">
@@ -205,7 +207,7 @@ export function MonthView({ currentDate, events, settings, searchQuery, onOpenEv
   const weekdayNames = Array.from({ length: 7 }, (_, index) => format(addDays(startOfWeek(new Date(), { weekStartsOn: settings.weekStartsOn }), index), "EEEE"))
   return (
     <div className="overflow-auto">
-      <div className="min-w-[700px] overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg">
+      <div className="min-w-[630px] overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg">
         <div className="grid grid-cols-7 border-b border-white/20">{weekdayNames.map((day) => <div key={day} className="border-l border-white/15 p-2 text-center text-xs font-medium text-white/70 first:border-l-0">{day}</div>)}</div>
         <div className="grid grid-cols-7">
           {days.map((day) => {

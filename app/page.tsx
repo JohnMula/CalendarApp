@@ -302,7 +302,7 @@ export default function Home() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-slate-950">
+    <div className="relative min-h-dvh w-full overflow-hidden bg-slate-950">
       {activeScene.image && <Image key={activeScene.id} src={activeScene.image} alt={`${activeScene.name} backdrop`} fill className="object-cover" priority />}
       <div
         className="absolute inset-0 transition-[background] duration-1000 ease-in-out"
@@ -312,37 +312,37 @@ export default function Home() {
       <WeatherOverlay condition={settings.liveWeather ? weather?.condition ?? null : null} />
 
       <header className={`relative z-30 flex min-h-20 items-center justify-between gap-4 px-4 py-4 sm:px-8 opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.2s" }}>
-        <div className="flex items-center gap-3">
-          <button onClick={() => setSidebarOpen(true)} aria-label="Toggle sidebar" className="rounded-md p-1 text-white drop-shadow-lg hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white lg:hidden"><Menu className="h-6 w-6" /></button>
-          <span className="text-xl font-semibold text-white drop-shadow-lg sm:text-2xl">Calendar</span>
+        <div className="flex min-w-0 items-center gap-3">
+          <button onClick={() => setSidebarOpen(true)} aria-label="Toggle sidebar" className="shrink-0 rounded-md p-1.5 text-white drop-shadow-lg hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white lg:hidden"><Menu className="h-6 w-6" /></button>
+          <span className="truncate text-xl font-semibold text-white drop-shadow-lg sm:text-2xl">Calendar</span>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
           <div className="relative hidden sm:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
-            <input ref={searchRef} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} type="search" placeholder="Search events" className="w-48 rounded-full border border-white/20 bg-white/10 py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/70 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 lg:w-64" />
+            <input ref={searchRef} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} type="search" placeholder="Search events" className="w-40 rounded-full border border-white/20 bg-white/10 py-2 pl-10 pr-4 text-base text-white placeholder:text-white/70 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 md:w-56 md:text-sm lg:w-64" />
             {searchResults.length > 0 && <div className="absolute right-0 top-11 z-40 w-72 overflow-hidden rounded-xl border border-white/20 bg-slate-950/95 p-1 shadow-2xl backdrop-blur-xl">
               <Command><CommandList><CommandGroup heading="Matching events">{searchResults.map((event) => <CommandItem key={event.id} value={event.title} onSelect={() => { goToDate(eventDate(event)); setSearchQuery("") }}><span className="truncate">{event.title}</span><span className="ml-auto text-xs text-muted-foreground">{format(eventDate(event), "MMM d")}</span></CommandItem>)}</CommandGroup><CommandEmpty>No matching events.</CommandEmpty></CommandList></Command>
             </div>}
           </div>
-          {(settings.dynamicLighting || (settings.liveWeather && weather)) && <div className="hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur-sm sm:flex">
+          {(settings.dynamicLighting || (settings.liveWeather && weather)) && <div className="hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur-sm md:flex">
             {settings.dynamicLighting && <><PeriodIcon className="h-3.5 w-3.5" /><span>{periodLabel}</span>{previewPeriod && <span className="text-white/60">· preview</span>}</>}
             {settings.liveWeather && weather && <span className={`flex items-center gap-1.5 ${settings.dynamicLighting ? "ml-0.5 border-l border-white/20 pl-2" : ""}`}>
               <WeatherIcon className="h-3.5 w-3.5" />{Math.round(weather.temperatureC)}°C
             </span>}
           </div>}
-          <button onClick={() => setMobileSearchOpen((isOpen) => !isOpen)} aria-label="Search events" className="rounded-md p-1 text-white drop-shadow-md hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white sm:hidden"><Search className="h-6 w-6" /></button>
-          <button onClick={() => setSettingsOpen(true)} aria-label="Settings" className="rounded-md p-1 text-white drop-shadow-md hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"><Settings className="h-6 w-6" /></button>
+          <button onClick={() => setMobileSearchOpen((isOpen) => !isOpen)} aria-label="Search events" className="shrink-0 rounded-md p-1.5 text-white drop-shadow-md hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white sm:hidden"><Search className="h-6 w-6" /></button>
+          <button onClick={() => setSettingsOpen(true)} aria-label="Settings" className="shrink-0 rounded-md p-1.5 text-white drop-shadow-md hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"><Settings className="h-6 w-6" /></button>
           <ProfileMenu />
         </div>
         {mobileSearchOpen && <div className="absolute left-4 right-4 top-[calc(100%-0.25rem)] rounded-xl border border-white/20 bg-slate-950/95 p-2 shadow-2xl backdrop-blur-xl sm:hidden">
-          <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" /><input autoFocus value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} type="search" placeholder="Search events" className="w-full rounded-lg border border-white/20 bg-white/10 py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50" /></div>
+          <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" /><input autoFocus value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} type="search" placeholder="Search events" className="w-full rounded-lg border border-white/20 bg-white/10 py-2 pl-10 pr-4 text-base text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50" /></div>
           {searchQuery.trim() && <Command className="mt-2 bg-transparent text-white"><CommandList><CommandGroup heading="Matching events">{searchResults.map((event) => <CommandItem key={event.id} value={event.title} onSelect={() => { goToDate(eventDate(event)); setSearchQuery(""); setMobileSearchOpen(false) }}><span className="truncate">{event.title}</span><span className="ml-auto text-xs text-white/60">{format(eventDate(event), "MMM d")}</span></CommandItem>)}</CommandGroup><CommandEmpty className="text-white/70">No matching events.</CommandEmpty></CommandList></Command>}
         </div>}
       </header>
 
-      <main className="relative z-10 flex min-h-[calc(100vh-5rem)]">
+      <main className="relative z-10 flex min-h-[calc(100dvh-5rem)]">
         <div className={`hidden w-64 shrink-0 border-r border-white/20 bg-white/10 shadow-xl backdrop-blur-lg lg:block opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.4s" }}><CalendarSidebar {...sidebarProps} /></div>
-        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}><SheetContent side="left" className="w-[18rem] border-white/20 bg-slate-950/95 p-0"><CalendarSidebar {...sidebarProps} /></SheetContent></Sheet>
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}><SheetContent side="left" className="w-[18rem] max-w-[85vw] border-white/20 bg-slate-950/95 p-0"><CalendarSidebar {...sidebarProps} /></SheetContent></Sheet>
 
         <section className={`flex min-w-0 flex-1 flex-col opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.6s" }}>
           <div className="flex flex-col gap-3 border-b border-white/20 p-4 xl:flex-row xl:items-center xl:justify-between">
@@ -369,7 +369,7 @@ export default function Home() {
 
       {showAIPopup && <div className="fixed bottom-4 right-4 z-20 w-[calc(100%-2rem)] max-w-md sm:bottom-8 sm:right-8">
         <div className="relative rounded-2xl border border-blue-300/30 bg-gradient-to-br from-blue-400/30 via-blue-500/30 to-blue-600/30 p-5 text-white shadow-xl backdrop-blur-lg sm:p-6">
-          <button onClick={() => setShowAIPopup(false)} aria-label="Close assistant suggestion" className="absolute right-2 top-2 rounded p-1 text-white/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"><X className="h-5 w-5" /></button>
+          <button onClick={() => setShowAIPopup(false)} aria-label="Close assistant suggestion" className="absolute right-2 top-2 rounded p-1.5 text-white/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"><X className="h-5 w-5" /></button>
           <div className="flex gap-3"><Sparkles className="mt-1 h-5 w-5 shrink-0 text-blue-200" /><div><p className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-100/80">Calendar assistant</p><p className="min-h-16 text-sm font-light sm:text-base">{typedText}</p></div></div>
           <div className="mt-5 flex gap-3"><button onClick={() => { if (assistantSuggestion.event) goToDate(eventDate(assistantSuggestion.event)); else openCreate(); setShowAIPopup(false) }} className="flex-1 rounded-xl bg-white/20 py-2.5 text-sm font-medium hover:bg-white/30">{assistantSuggestion.action}</button><button onClick={() => setShowAIPopup(false)} className="flex-1 rounded-xl bg-white/10 py-2.5 text-sm font-medium hover:bg-white/20">Dismiss</button></div>
         </div>
