@@ -302,7 +302,7 @@ export default function Home() {
   }
 
   return (
-    <div className="relative min-h-dvh w-full overflow-hidden bg-slate-950">
+    <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-slate-950">
       {activeScene.image && <Image key={activeScene.id} src={activeScene.image} alt={`${activeScene.name} backdrop`} fill className="object-cover" priority />}
       <div
         className="absolute inset-0 transition-[background] duration-1000 ease-in-out"
@@ -311,7 +311,7 @@ export default function Home() {
       <div className={`absolute inset-0 ${mounted && resolvedTheme === "dark" ? "bg-slate-950/45" : "bg-sky-950/15"}`} />
       <WeatherOverlay condition={settings.liveWeather ? weather?.condition ?? null : null} />
 
-      <header className={`relative z-30 flex min-h-20 items-center justify-between gap-4 px-4 py-4 sm:px-8 opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.2s" }}>
+      <header className={`relative z-30 flex min-h-20 shrink-0 items-center justify-between gap-4 px-4 py-4 sm:px-8 opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.2s" }}>
         <div className="flex min-w-0 items-center gap-3">
           <button onClick={() => setSidebarOpen(true)} aria-label="Toggle sidebar" className="shrink-0 rounded-md p-1.5 text-white drop-shadow-lg hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white lg:hidden"><Menu className="h-6 w-6" /></button>
           <span className="truncate text-xl font-semibold text-white drop-shadow-lg sm:text-2xl">Calendar</span>
@@ -340,7 +340,7 @@ export default function Home() {
         </div>}
       </header>
 
-      <main className="relative z-10 flex min-h-[calc(100dvh-5rem)]">
+      <main className="relative z-10 flex min-h-0 flex-1">
         <div className={`hidden w-64 shrink-0 border-r border-white/20 bg-white/10 shadow-xl backdrop-blur-lg lg:block opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.4s" }}><CalendarSidebar {...sidebarProps} /></div>
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="w-[18rem] max-w-[85vw] border-white/20 bg-slate-950/95 p-0">
