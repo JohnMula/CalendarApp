@@ -161,8 +161,8 @@ function TimeGrid({ days, events, settings, searchQuery, onOpenEvent, onTimeSlot
   const nowMinutes = now.getHours() * 60 + now.getMinutes()
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg">
-      <div ref={scrollRef} className="max-h-[min(70vh,640px)] overflow-auto">
+    <div className="flex h-full min-h-[400px] flex-col overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg">
+      <div ref={scrollRef} className="flex-1 overflow-auto">
         <div style={{ minWidth: `${minGridWidth}px` }}>
           <div className="sticky top-0 z-20 bg-slate-950/40 backdrop-blur-lg">
             <div className="grid border-b border-white/20" style={gridStyle}>
@@ -236,20 +236,18 @@ export function MonthView({ currentDate, events, settings, searchQuery, onOpenEv
   })
   const weekdayNames = Array.from({ length: 7 }, (_, index) => format(addDays(startOfWeek(new Date(), { weekStartsOn: settings.weekStartsOn }), index), "EEEE"))
   return (
-    <div className="overflow-auto">
-      <div className="min-w-[630px] overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg">
-        <div className="grid grid-cols-7 border-b border-white/20">{weekdayNames.map((day) => <div key={day} className="border-l border-white/15 p-2 text-center text-xs font-medium text-white/70 first:border-l-0">{day}</div>)}</div>
-        <div className="grid grid-cols-7">
-          {days.map((day) => {
-            const dayEvents = events.filter((event) => isSameDay(eventDate(event), day))
-            const displayed = dayEvents.slice(0, 3)
-            return <div key={day.toISOString()} role="button" tabIndex={0} onClick={() => onDaySelect(day)} onKeyDown={(keyboardEvent) => { if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") { keyboardEvent.preventDefault(); onDaySelect(day) } }} className={`min-h-28 border-b border-l border-white/15 p-2 text-left transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-300 ${!isSameMonth(day, currentDate) ? "bg-black/10 text-white/35" : ""}`}>
-              <span className={`mb-1 flex h-7 w-7 items-center justify-center rounded-full text-sm text-white ${isToday(day) ? "bg-blue-500" : ""}`}>{format(day, "d")}</span>
-              <div className="space-y-0.5">{displayed.map((event) => <EventChip key={event.id} event={event} settings={settings} searchQuery={searchQuery} onOpenEvent={onOpenEvent} />)}</div>
-              {dayEvents.length > displayed.length && <span className="block px-1.5 pt-1 text-xs text-white/65">+{dayEvents.length - displayed.length} more</span>}
-            </div>
-          })}
-        </div>
+    <div className="flex h-full min-h-[500px] flex-col overflow-hidden rounded-xl border border-white/20 bg-white/20 shadow-xl backdrop-blur-lg">
+      <div className="grid grid-cols-7 border-b border-white/20">{weekdayNames.map((day) => <div key={day} className="border-l border-white/15 p-2 text-center text-xs font-medium text-white/70 first:border-l-0">{day}</div>)}</div>
+      <div className="grid flex-1 auto-rows-fr grid-cols-7 overflow-auto">
+        {days.map((day) => {
+          const dayEvents = events.filter((event) => isSameDay(eventDate(event), day))
+          const displayed = dayEvents.slice(0, 3)
+          return <div key={day.toISOString()} role="button" tabIndex={0} onClick={() => onDaySelect(day)} onKeyDown={(keyboardEvent) => { if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") { keyboardEvent.preventDefault(); onDaySelect(day) } }} className={`min-h-[64px] border-b border-l border-white/15 p-2 text-left transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-300 ${!isSameMonth(day, currentDate) ? "bg-black/10 text-white/35" : ""}`}>
+            <span className={`mb-1 flex h-7 w-7 items-center justify-center rounded-full text-sm text-white ${isToday(day) ? "bg-blue-500" : ""}`}>{format(day, "d")}</span>
+            <div className="space-y-0.5">{displayed.map((event) => <EventChip key={event.id} event={event} settings={settings} searchQuery={searchQuery} onOpenEvent={onOpenEvent} />)}</div>
+            {dayEvents.length > displayed.length && <span className="block px-1.5 pt-1 text-xs text-white/65">+{dayEvents.length - displayed.length} more</span>}
+          </div>
+        })}
       </div>
     </div>
   )
