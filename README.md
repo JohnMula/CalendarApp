@@ -1,4 +1,4 @@
-# Calendar App
+# Calendar App📅
 
 A modern, responsive calendar application built with **Next.js, React, TypeScript, and Tailwind CSS**. It provides a clean interface for organizing events, managing schedules, and viewing your calendar across different time periods.
 
