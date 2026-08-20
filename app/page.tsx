@@ -301,6 +301,18 @@ export default function Home() {
     onJumpToEvent: (event: CalendarEvent) => goToDate(eventDate(event)),
   }
 
+  // Server and client render this before any client clock/timezone/locale value can be
+  // trusted (see currentDate/miniDate/now above), so both sides render this same fixed
+  // markup on the first pass. The real calendar swaps in immediately once mounted (below),
+  // avoiding hydration mismatches from anything time-, timezone-, or locale-dependent.
+  if (!mounted) {
+    return (
+      <div className="flex h-dvh w-full items-center justify-center bg-slate-950">
+        <span className="animate-pulse text-sm font-medium text-white/60">Loading calendar…</span>
+      </div>
+    )
+  }
+
   return (
     <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-slate-950">
       {activeScene.image && <Image key={activeScene.id} src={activeScene.image} alt={`${activeScene.name} backdrop`} fill sizes="100vw" className="object-cover" priority />}
