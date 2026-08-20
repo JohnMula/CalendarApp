@@ -9,6 +9,7 @@ import { toast } from "sonner"
 
 import { DayView, MonthView, WeekView, YearView } from "@/components/calendar/calendar-views"
 import { EventDialog } from "@/components/calendar/event-dialog"
+import { CalendarLogo } from "@/components/calendar/logo"
 import { ProfileMenu } from "@/components/calendar/profile-menu"
 import { CalendarSidebar } from "@/components/calendar/sidebar"
 import { SettingsDialog } from "@/components/calendar/settings-dialog"
@@ -16,6 +17,7 @@ import { WeatherOverlay } from "@/components/calendar/weather-overlay"
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/sonner"
+import { useDynamicFavicon } from "@/hooks/use-dynamic-favicon"
 import { useGeolocation } from "@/hooks/use-geolocation"
 import { calendars, defaultSettings, eventDate, eventStart, formatEventTime, matchesSearch, type CalendarEvent, type CalendarSettings, type CalendarView } from "@/lib/calendar"
 import { dayPeriods, getDayPeriod, periodGradients, periodTints, scenes, type DayPeriod } from "@/lib/scenes"
@@ -105,6 +107,8 @@ export default function Home() {
     const clockTimer = window.setInterval(() => setNow(new Date()), 60000)
     return () => window.clearInterval(clockTimer)
   }, [])
+
+  useDynamicFavicon(now.getDate())
 
   useEffect(() => {
     const storedSettings = readStored<CalendarSettings>(SETTINGS_STORAGE_KEY)
@@ -337,6 +341,7 @@ export default function Home() {
       <header className={`relative z-30 flex min-h-20 shrink-0 items-center justify-between gap-4 px-4 py-4 sm:px-8 opacity-0 ${isLoaded ? "animate-fade-in" : ""}`} style={{ animationDelay: "0.2s" }}>
         <div className="flex min-w-0 items-center gap-3">
           <button onClick={() => setSidebarOpen(true)} aria-label="Toggle sidebar" className="shrink-0 rounded-md p-1.5 text-white drop-shadow-lg hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white lg:hidden"><Menu className="h-6 w-6" /></button>
+          <CalendarLogo date={now} size={28} className="shrink-0 drop-shadow-lg" />
           <span className="truncate text-xl font-semibold text-white drop-shadow-lg sm:text-2xl">Calendar</span>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
