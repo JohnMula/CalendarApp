@@ -282,7 +282,7 @@ export default function Home() {
 
   const activeScene = useMemo(() => scenes.find((scene) => scene.id === settings.scene) ?? scenes[0], [settings.scene])
   const livePeriod = useMemo(() => getDayPeriod(now), [now])
-  const activePeriod = previewPeriod ?? livePeriod
+  const activePeriod = previewPeriod ?? (mounted ? livePeriod : "midday")
   const litPeriod = settings.dynamicLighting ? activePeriod : "midday"
   const PeriodIcon = periodIcons[activePeriod]
   const periodLabel = dayPeriods.find((period) => period.id === activePeriod)?.label ?? ""
