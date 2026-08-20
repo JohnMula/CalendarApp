@@ -42,6 +42,7 @@ const periodIcons: Record<DayPeriod, typeof Sun> = {
 const EVENTS_STORAGE_KEY = "glass-calendar-events"
 const SETTINGS_STORAGE_KEY = "glass-calendar-settings"
 const VISIBILITY_STORAGE_KEY = "glass-calendar-visibility"
+const AI_POPUP_DISMISSED_KEY = "glass-calendar-ai-popup-dismissed"
 
 const defaultVisibility = Object.fromEntries(calendars.map((calendar) => [calendar.id, true])) as Record<string, boolean>
 
@@ -95,6 +96,7 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
     setIsLoaded(true)
+    if (readStored<boolean>(AI_POPUP_DISMISSED_KEY)) return
     const popupTimer = window.setTimeout(() => setShowAIPopup(true), 3000)
     return () => window.clearTimeout(popupTimer)
   }, [])
@@ -216,6 +218,15 @@ export default function Home() {
     setMiniDate(date)
     setView(nextView)
     setSidebarOpen(false)
+  }
+
+  const dismissAIPopup = () => {
+    setShowAIPopup(false)
+    try {
+      window.localStorage.setItem(AI_POPUP_DISMISSED_KEY, JSON.stringify(true))
+    } catch {
+      // localStorage unavailable — popup just won't persist its dismissed state
+    }
   }
 
   const visibleEvents = useMemo(() => events.filter((event) => visibleCalendars[event.calendar] ?? true), [events, visibleCalendars])
@@ -387,9 +398,9 @@ export default function Home() {
 
       {showAIPopup && <div className="fixed bottom-4 right-4 z-20 w-[calc(100%-2rem)] max-w-md sm:bottom-8 sm:right-8">
         <div className="relative rounded-2xl border border-blue-300/30 bg-gradient-to-br from-blue-400/30 via-blue-500/30 to-blue-600/30 p-5 text-white shadow-xl backdrop-blur-lg sm:p-6">
-          <button onClick={() => setShowAIPopup(false)} aria-label="Close assistant suggestion" className="absolute right-2 top-2 rounded p-1.5 text-white/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"><X className="h-5 w-5" /></button>
+          <button onClick={dismissAIPopup} aria-label="Close assistant suggestion" className="absolute right-2 top-2 rounded p-1.5 text-white/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"><X className="h-5 w-5" /></button>
           <div className="flex gap-3"><Sparkles className="mt-1 h-5 w-5 shrink-0 text-blue-200" /><div><p className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-100/80">Calendar assistant</p><p className="min-h-16 text-sm font-light sm:text-base">{typedText}</p></div></div>
-          <div className="mt-5 flex gap-3"><button onClick={() => { if (assistantSuggestion.event) goToDate(eventDate(assistantSuggestion.event)); else openCreate(); setShowAIPopup(false) }} className="flex-1 rounded-xl bg-white/20 py-2.5 text-sm font-medium hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white">{assistantSuggestion.action}</button><button onClick={() => setShowAIPopup(false)} className="flex-1 rounded-xl bg-white/10 py-2.5 text-sm font-medium hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white">Dismiss</button></div>
+          <div className="mt-5 flex gap-3"><button onClick={() => { if (assistantSuggestion.event) goToDate(eventDate(assistantSuggestion.event)); else openCreate(); dismissAIPopup() }} className="flex-1 rounded-xl bg-white/20 py-2.5 text-sm font-medium hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white">{assistantSuggestion.action}</button><button onClick={dismissAIPopup} className="flex-1 rounded-xl bg-white/10 py-2.5 text-sm font-medium hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white">Dismiss</button></div>
         </div>
       </div>}
 
