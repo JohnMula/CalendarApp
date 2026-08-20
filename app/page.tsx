@@ -303,7 +303,7 @@ export default function Home() {
 
   return (
     <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-slate-950">
-      {activeScene.image && <Image key={activeScene.id} src={activeScene.image} alt={`${activeScene.name} backdrop`} fill className="object-cover" priority />}
+      {activeScene.image && <Image key={activeScene.id} src={activeScene.image} alt={`${activeScene.name} backdrop`} fill sizes="100vw" className="object-cover" priority />}
       <div
         className="absolute inset-0 transition-[background] duration-1000 ease-in-out"
         style={{ background: activeScene.image ? periodTints[litPeriod] : periodGradients[litPeriod] }}

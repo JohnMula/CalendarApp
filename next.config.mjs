@@ -20,10 +20,10 @@ const cspDirectives = [
   // tag via dangerouslySetInnerHTML for chart theming.
   `style-src 'self' 'unsafe-inline'`,
 
-  // 'self' for the app's own images/icons, images.unsplash.com for the scene
-  // backdrops (lib/scenes.ts), data: for the small inline SVG/base64 assets
-  // Next.js and some UI components use.
-  `img-src 'self' https://images.unsplash.com data:`,
+  // Scene backdrops are self-hosted under /public/scenes/ (lib/scenes.ts), so
+  // img-src doesn't need to trust any external image host - just our own
+  // origin, plus data: for small inline SVG/base64 assets some UI components use.
+  `img-src 'self' data:`,
 
   // next/font self-hosts Inter at build time, so fonts are served from our own
   // origin - no external font host needs to be allowed.
@@ -79,9 +79,6 @@ const securityHeaders = [
 ]
 
 const nextConfig = {
-  images: {
-    unoptimized: true,
-  },
   async headers() {
     return [
       {

@@ -9,36 +9,40 @@ export type Scene = {
   image: string | null
 }
 
+// Scene backdrops are self-hosted under /public/scenes/ (see /public/scenes/README.md
+// for provenance + how to re-fetch them) rather than hotlinked to an external CDN, so the
+// app doesn't depend on a third party's URLs staying alive, and Next/Image can actually
+// optimize them (see next.config.mjs - images.unoptimized is off).
 export const scenes: Scene[] = [
   {
     id: "mountain",
     name: "Mountain",
     description: "Misty peaks at first light",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop",
+    image: "/scenes/mountain.jpg",
   },
   {
     id: "forest",
     name: "Forest",
     description: "A quiet road through the trees",
-    image: "https://images.unsplash.com/photo-1748357664473-664bfc3e1b67?q=80&w=2070&auto=format&fit=crop",
+    image: "/scenes/forest.jpg",
   },
   {
     id: "ocean",
     name: "Ocean",
     description: "Turquoise waves rolling in",
-    image: "https://images.unsplash.com/photo-1780754001191-840925523a74?q=80&w=2070&auto=format&fit=crop",
+    image: "/scenes/ocean.jpg",
   },
   {
     id: "city",
     name: "City Night",
     description: "Skyline lights after dark",
-    image: "https://images.unsplash.com/photo-1690741818722-3f96fc94f678?q=80&w=2070&auto=format&fit=crop",
+    image: "/scenes/city.jpg",
   },
   {
     id: "aurora",
     name: "Aurora",
     description: "Northern lights overhead",
-    image: "https://images.unsplash.com/photo-1768981931384-8f8f170043b3?q=80&w=2070&auto=format&fit=crop",
+    image: "/scenes/aurora.jpg",
   },
   {
     id: "minimal",
@@ -86,5 +90,3 @@ export const periodGradients: Record<DayPeriod, string> = {
   dusk: "linear-gradient(160deg, #a15bb0 0%, #5b3f8f 55%, #241a4d 100%)",
   night: "linear-gradient(160deg, #232a52 0%, #131735 55%, #05060f 100%)",
 }
-
-export const toThumb = (url: string) => url.replace("w=2070", "w=240")

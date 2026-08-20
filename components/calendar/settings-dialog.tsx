@@ -1,9 +1,10 @@
 "use client"
 
+import Image from "next/image"
 import { useTheme } from "next-themes"
 
 import type { CalendarSettings, CalendarView } from "@/lib/calendar"
-import { dayPeriods, periodGradients, scenes, toThumb, type DayPeriod } from "@/lib/scenes"
+import { dayPeriods, periodGradients, scenes, type DayPeriod } from "@/lib/scenes"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -47,7 +48,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onChange, preview
             <Label className="text-white">Scene</Label>
             <div className="grid grid-cols-3 gap-2">
               {scenes.map((scene) => <button key={scene.id} type="button" aria-pressed={settings.scene === scene.id} onClick={() => update("scene", scene.id)} className={`group relative flex h-16 items-end overflow-hidden rounded-lg border text-left transition focus:outline-none focus:ring-2 focus:ring-blue-300 ${settings.scene === scene.id ? "border-white ring-2 ring-white/80" : "border-white/20 hover:border-white/50"}`}>
-                {scene.image ? <img src={toThumb(scene.image)} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0" style={{ background: periodGradients.midday }} />}
+                {scene.image ? <Image src={scene.image} alt="" fill sizes="150px" className="object-cover" /> : <div className="absolute inset-0" style={{ background: periodGradients.midday }} />}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
                 <span className="relative z-10 px-1.5 pb-1 text-[11px] font-medium leading-tight text-white drop-shadow">{scene.name}</span>
               </button>)}
