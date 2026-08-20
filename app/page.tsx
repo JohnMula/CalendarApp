@@ -17,7 +17,7 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/sonner"
 import { useGeolocation } from "@/hooks/use-geolocation"
-import { calendars, createSampleEvents, defaultSettings, eventDate, eventStart, formatEventTime, matchesSearch, type CalendarEvent, type CalendarSettings, type CalendarView } from "@/lib/calendar"
+import { calendars, defaultSettings, eventDate, eventStart, formatEventTime, matchesSearch, type CalendarEvent, type CalendarSettings, type CalendarView } from "@/lib/calendar"
 import { dayPeriods, getDayPeriod, periodGradients, periodTints, scenes, type DayPeriod } from "@/lib/scenes"
 import { conditionLabels, fetchWeather, type WeatherCondition, type WeatherSnapshot } from "@/lib/weather"
 
@@ -76,7 +76,7 @@ export default function Home() {
   const [now, setNow] = useState(() => new Date())
   const [previewPeriod, setPreviewPeriod] = useState<DayPeriod | null>(null)
   const [view, setView] = useState<CalendarView>("week")
-  const [events, setEvents] = useState<CalendarEvent[]>(() => createSampleEvents(new Date()))
+  const [events, setEvents] = useState<CalendarEvent[]>([])
   const [settings, setSettings] = useState<CalendarSettings>(defaultSettings)
   const [visibleCalendars, setVisibleCalendars] = useState(defaultVisibility)
   const [hydrated, setHydrated] = useState(false)
